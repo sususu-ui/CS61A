@@ -94,7 +94,16 @@ class Matrix(Ring):
          [10, 10, 10],
          [10, 10, 10]]
         """
-        """YOUR CODE HERE"""
+        return Matrix ( [[ self.elements[i][j] + other.elements[i][j] for j in range(3) ] for i in range(3) ] )
+        """
+        new_matrix = []
+        for i in range(3):
+            line = []
+            for j in range(3):
+                line += [self.elements[i][j] + other.elements[i][j]]
+            new_matrix.append(line)
+        return new_matrix
+        """
     
     def mult(self, other):
         """Returns a new Matrix representing the product of self and other.
@@ -105,7 +114,7 @@ class Matrix(Ring):
          [84, 69, 54],
          [138, 114, 90]]
         """
-        """YOUR CODE HERE"""
+        return Matrix ( [[ sum( self.elements[i][k] * other.elements[k][j] for k in range(3) ) for j in range(3) ] for i in range(3) ] )
     
     def negation(self):
         """Returns a new Matrix representing the additive inverse of self.
@@ -115,15 +124,16 @@ class Matrix(Ring):
          [4, -5, 6],
          [-7, 8, -9]]
         """
-        """YOUR CODE HERE"""
+        return Matrix ( [[ -self.elements[i][j] for j in range(3) ] for i in range(3) ] )
+                
 
     def zero(self):
         """Returns the zero matrix."""
-        """YOUR CODE HERE"""
+        return Matrix ( [[ 0 for j in range(3) ] for i in range(3) ] )
     
     def one(self):
         """Returns the identity matrix."""
-        """YOUR CODE HERE"""
+        return Matrix ( [[ 1 if i == j else 0 for j in range(3) ] for i in range(3) ] )
     
     def __repr__(self):
         """Returns the string representation of the matrix.
@@ -152,7 +162,38 @@ class Polynomial(Ring):
         >>> p1.add(p2)
         5x^2 + 6x + 4
         """
-        """YOUR CODE HERE"""
+        # Attention! 我们需要考虑多余0的情况
+        """
+        res= ( [ ( 0 if self.coefficients[i:] == [] else self.coefficients[i] )
+                              + 
+                              ( 0 if other.coefficients[i:] == [] else other.coefficients[i] )
+                                for i in range( max(
+                                                        len(self.coefficients),
+                                                        len(other.coefficients)
+                                                    )
+                                                )
+                                ]
+                            )
+        while len(res) > 1 and res[-1] == 0:
+            res.pop()
+
+        return Polynomial(res if res else [0])
+        """
+        #be a one-liner!
+        return Polynomial(
+            (lambda r: r[: max( (i for i, v in enumerate(r) if v), default=-1 ) + 1] or [0])
+            (
+                [   (0 if self.coefficients[i:] == []  else self.coefficients[i])
+                    + 
+                    (0 if other.coefficients[i:] == [] else other.coefficients[i])
+                        for i in range( max(
+                                            len(self.coefficients),
+                                            len(other.coefficients)
+                                            )
+                                        )
+                ]
+            )
+        )
     
     def mult(self, other):
         """Returns a new Polynomial representing the product of self and other.
@@ -161,7 +202,91 @@ class Polynomial(Ring):
         >>> p1.mult(p2)
         8x^2 + 10x + 3
         """
-        """YOUR CODE HERE"""
+        
+        """
+        先给出deep seek的一个解法
+        
+        # 两个多项式相乘，结果的最高次项是 len1 + len2 - 2
+            res_len = len(self.coefficients) + len(other.coefficients) - 1
+            ans_coeffs = [0] * res_len
+    
+            for i, a in enumerate(self.coefficients):
+                for j, b in enumerate(other.coefficients):
+                    ans_coeffs[i + j] += a * b
+            
+            return Polynomial(ans_coeffs)
+        
+        """
+
+        """
+        已经成功的一个解法
+        res = []
+        for i in range(len(self.coefficients)):
+            line = []
+            for k in range(i):
+                line.append(0)
+            for j in other.coefficients:
+                line.append(j * self.coefficients[i])
+            res.append(line)
+
+            #下面尝试将这段代码 one-lined
+
+        """
+        # 注：下面[ j * self.coefficients[i] for j in other.coefficients ]会导致三层列表
+        # but 改为 () 则变成了generator，同样报错
+        """
+        res = [ [ [ j * self.coefficients[i] for j in other.coefficients ]if k == i else 0
+                    for k in range(i+1)
+                    ]
+                        for i in range(len(self.coefficients))
+                ]
+        """
+        #一种可行的解法：
+        """
+        res = [ [0] * i 
+               +
+                [j * self.coefficients[i] for j in other.coefficients]
+                    for i in range(len(self.coefficients))
+                ]
+        """
+        #上面的解法看起来不错，不过，如果我想在原来的代码上修改呢？
+        #再加一层循环，将列表flatten拍平！
+        """
+        res = [ [ item 
+                    
+                        for k in range(i + 1)
+                        for item in ([j * self.coefficients[i] for j in other.coefficients] if k == i else [0])
+                    ]
+                    for i in range(len(self.coefficients))
+                ]
+        
+        ans = Polynomial([])
+        for i in res:
+            ans = ans.add(Polynomial(i))
+        return ans
+        """
+        #下面实现组装
+        """
+        Let's try to be a one-liner!
+        
+        """
+        return (ans := Polynomial([0]))and [
+                        ans := ans.add(Polynomial(row)) 
+                            for row in ([0] * i + [j * self.coefficients[i] 
+                                    for j in other.coefficients] for i in range(len(self.coefficients)))
+                ] and ans
+        #Another way! Much more easy to come up with!
+        #卷积实现
+        """
+        return Polynomial(
+            [sum((self.coefficients[i] * other.coefficients[k - i] 
+                        for i in range(len(self.coefficients)) if 0 <= k - i < len(other.coefficients)), 0)
+
+                            for k in range(len(self.coefficients) + len(other.coefficients) - 1)
+                            ]
+                        )
+        """
+        
     
     def negation(self):
         """Returns a new Polynomial representing the additive inverse of self.
@@ -169,15 +294,15 @@ class Polynomial(Ring):
         >>> p.negation()
         -3x^2 + 2x - 1
         """
-        """YOUR CODE HERE"""
+        return Polynomial ([-i for i in self.coefficients])
 
     def zero(self):
         """Returns the zero polynomial."""
-        """YOUR CODE HERE"""
+        return Polynomial([0])
 
     def one(self):
         """Returns the identity polynomial."""
-        """YOUR CODE HERE"""
+        return Polynomial([1])
 
     def __repr__(self):
         """Returns the string representation of the polynomial.
@@ -211,7 +336,7 @@ class Integer(Polynomial):
         >>> Integer(5)
         5
         """
-        """YOUR CODE HERE"""
+        super().__init__([value])
 
     def zero(self):
         """Returns the additive identity integer (0)."""
