@@ -38,8 +38,31 @@ class Ring:
         3x + 3
         """
         assert n >= 0, "n must be a non-negative integer."
-        """YOUR CODE HERE"""
 
+        
+        #基础写法
+        ans = self.zero()
+        for _ in range(n):
+            ans = ans.add(self)
+        return ans
+        
+
+        #性能最快的写法
+        """
+        if n == 0:
+            return self.zero()
+        if n == 1:
+            return self
+        if n % 2 == 0:
+            half = self.ntimes(n // 2)
+            return half.add(half)
+        else:
+            return self.add(self.ntimes(n - 1))
+        """
+
+        #海象运算符
+        return (ans := self.zero()) and [ans := ans.add(self) for _ in range(n)] and ans
+    
     # Problem 1.3
     def power(self, n):
         """Returns self raised to the power of n using repeated multiplication.
@@ -51,7 +74,10 @@ class Ring:
         x^3 + 3x^2 + 3x + 1
         """
         assert n >= 0, "Exponent must be a non-negative integer."
-        """YOUR CODE HERE"""
+        ans = self.one()
+        for _ in range(n):
+            ans = ans.mult(self)
+        return ans
 
 # Problem 1.3
 def subst_poly(poly, x):
@@ -70,7 +96,18 @@ def subst_poly(poly, x):
     >>> subst_poly(poly, p)
     3x^4 - 2x^2 + 1
     """
-    """YOUR CODE HERE"""
+    res = x.zero()
+    for i, value in enumerate(poly.coefficients):#.coefficients 只出现在 poly 上
+        if value == 0:
+            continue
+        term = x.power(i)
+        if value > 0:
+            term = term.ntimes(value)
+        else:
+            term = term.ntimes(-value).negation()
+        res = res.add(term)
+    return res
+
 
 # Problem 1.1
 class Matrix(Ring):
@@ -369,7 +406,9 @@ class Buff:
         >>> buff.decrease_duration()
         True
         """
-        """YOUR CODE HERE"""
+        self.duration -= 1
+        return True if self.duration == 0 else False
+
     
     def copy(self):
         """Returns a copy of the buff."""
@@ -421,7 +460,7 @@ class Weapon(Equipment):
         >>> print(sword.price)
         100
         """
-        """YOUR CODE HERE"""
+        super().__init__(name, attack_bonus, 0, price)
 
 
 class Armor(Equipment):
@@ -435,7 +474,7 @@ class Armor(Equipment):
         >>> print(shield.price)
         80
         """
-        """YOUR CODE HERE"""
+        super().__init__(name, 0, defense_bonus, price)
 
 
 # Problem 2.2
@@ -461,7 +500,7 @@ class Character:
         >>> char.get_attack()
         25
         """
-        """YOUR CODE HERE"""
+        return self.base_attack + sum(i.attack_bonus for i in self.buffs)
     
     def get_defense(self):
         """Calculate total defense including buffs.
@@ -471,7 +510,7 @@ class Character:
         >>> char.get_defense()
         13
         """
-        """YOUR CODE HERE"""
+        return self.base_defense + sum(i.defense_bonus for i in self.buffs)
     
     def take_damage(self, damage):
         """Apply damage, accounting for defense. Returns actual damage taken.
@@ -481,7 +520,16 @@ class Character:
         >>> char.current_hp
         85
         """
-        """YOUR CODE HERE"""
+        real_damage = damage - self.get_defense()
+        if real_damage >= self.current_hp:
+            real_damage = self.current_hp
+            self.current_hp = 0
+            return real_damage
+        elif real_damage <= 0:
+            return 0 
+        else:
+            self.current_hp -= real_damage
+            return real_damage
     
     def heal(self, amount):
         """Heal the character. Returns actual amount healed.
@@ -492,7 +540,10 @@ class Character:
         >>> char.current_hp
         80
         """
-        """YOUR CODE HERE"""
+        if self.current_hp + amount > self.max_hp:
+            amount = self.max_hp - self.current_hp
+        self.current_hp += amount
+        return amount
     
     def update_buffs(self):
         """Update all buffs (decrease duration, remove expired).
@@ -509,7 +560,27 @@ class Character:
         >>> len(char.buffs)
         0
         """
-        """YOUR CODE HERE"""
+        # Attention 注意索引删去之后元素会前移，常规for会失效
+        # for example if you write your code like this~
+        """for i, buff in enumerate(self.buffs):
+            if buff.decrease_duration():
+                self.buffs.pop(i)
+                """
+
+        #For real solutions
+        """
+        #先走一遍然后统一删
+        self.buffs = [i for i in self.buffs if i.decrease_duration() is False]
+
+        #倒序便利
+        for i in range(len(self.buffs) - 1, -1, -1):
+            if self.buffs[i].decrease_duration():
+                self.buffs.pop(i)
+        """
+        #列表推导
+        self.buffs = [i for i in self.buffs if not i.decrease_duration()]
+
+
     
     def basic_attack(self, target):
         """Perform a basic attack on target."""
@@ -530,7 +601,9 @@ class Character:
         >>> char.buffs[0]
         Exhaustion: ATK -5, DEF -3 (2 turns)
         """
-        """YOUR CODE HERE"""
+        damage = int(self.get_attack() * 1.5)
+        actual_damage = target.take_damage(damage)
+        self.buffs.append(Buff("Exhaustion", attack_bonus=-5, defense_bonus=-3, duration=2))
         return f"{self.name} uses magic attack on {target.name} for {actual_damage} damage!"
 
     def __repr__(self):
@@ -571,7 +644,8 @@ class Player(Character):
         >>> player.get_attack()
         25
         """
-        """YOUR CODE HERE"""
+        bonus = self.equipped_weapon.attack_bonus if self.equipped_weapon else 0
+        return super().get_attack() + bonus
     
     def get_defense(self):
         """Override to include armor bonus.
@@ -581,7 +655,8 @@ class Player(Character):
         >>> player.get_defense()
         13
         """
-        """YOUR CODE HERE"""
+        bonus = self.equipped_armor.defense_bonus if self.equipped_armor else 0
+        return super().get_defense() + bonus
     
     def equip_weapon(self, weapon):
         """Equip a weapon."""
@@ -599,7 +674,11 @@ class Player(Character):
         >>> player.gold
         20
         """
-        """YOUR CODE HERE"""
+        if self.gold >= amount:
+            self.gold -=amount
+            return True
+        else:
+            return False
     
     def use_potion(self):
         """Use a health potion.
@@ -613,7 +692,11 @@ class Player(Character):
         >>> player.potions
         2
         """
-        """YOUR CODE HERE"""
+        if not self.potions:
+            return None
+        healed = self.heal(50)
+        self.potions -= 1
+
         return f"Used a potion! Restored {healed} HP."
     
     def add_experience(self, amount):
@@ -639,8 +722,16 @@ class Player(Character):
         >>> player.base_attack
         25
         """
-        """YOUR CODE HERE"""
-        return f"Level Up! You are now level {self.level}!"
+        self.experience += amount
+        start_level = self.level
+        while self.experience >= self.level * 50:
+            self.experience -= self.level * 50
+            self.level += 1
+            self.max_hp += 20
+            self.base_attack += 5
+            self.base_defense += 2
+            self.current_hp = self.max_hp
+        return (f"Level Up! You are now level {self.level}!" if self.level > start_level else None)
 
 
 class Enemy(Character):
@@ -722,5 +813,14 @@ class Boss(Enemy):
         >>> player.current_hp
         0
         """
-        """YOUR CODE HERE"""
-        return f"{self.name} enters a frenzy! (ATK +40, DEF -20)"
+        #状态一
+        if self.current_hp >= 0.7 * self.max_hp:
+            return self.basic_attack(player)
+        #状态二
+        if not any(i.name == "Frenzy" for i in self.buffs):
+            self.buffs.append(
+                Buff("Frenzy", attack_bonus=40, defense_bonus=-20, duration=999)
+            )
+            return f"{self.name} enters a frenzy! (ATK +40, DEF -20)"
+        #状态三
+        return self.magic_attack(player)
