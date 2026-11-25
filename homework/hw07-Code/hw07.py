@@ -29,6 +29,79 @@ class Polynomial:
     >>> print(zero)
     0
     """
+    def __init__(self, polynomial):
+        coeffs = polynomial
+        while len(coeffs) > 1 and coeffs[-1] == 0:
+            coeffs.pop()
+        self.coeffs = coeffs
+    # Actually the following part of __add__ and __mul__ are directly copied from hw06
+    # Hum...
+    # so skip Line 40 - Line 82
+    def __add__(self, other):
+        # Attention! 我们需要考虑多余0的情况
+        """
+        res= ( [ ( 0 if self.coefficients[i:] == [] else self.coefficients[i] )
+                              + 
+                              ( 0 if other.coefficients[i:] == [] else other.coefficients[i] )
+                                for i in range( max(
+                                                        len(self.coefficients),
+                                                        len(other.coefficients)
+                                                    )
+                                                )
+                                ]
+                            )
+        while len(res) > 1 and res[-1] == 0:
+            res.pop()
+
+        return Polynomial(res if res else [0])
+        """
+        #be a one-liner!
+        return Polynomial(
+            (lambda r: r[: max( (i for i, v in enumerate(r) if v), default=-1 ) + 1] or [0])
+            (
+                [   (0 if self.coeffs[i:] == []  else self.coeffs[i])
+                    + 
+                    (0 if other.coeffs[i:] == [] else other.coeffs[i])
+                        for i in range( max(
+                                            len(self.coeffs),
+                                            len(other.coeffs)
+                                            )
+                                        )
+                ]
+            )
+        )
+    
+    add = __add__ #打个补丁，不然mul会报错
+
+    # For more detailed implement of mul, look up for hw06!
+    def __mul__(self, other):
+        return (ans := Polynomial([0]))and [
+                        ans := ans.add(Polynomial(row)) 
+                            for row in ([0] * i + [j * self.coeffs[i] 
+                                    for j in other.coeffs] for i in range(len(self.coeffs)))
+                ] and ans
+    
+    def __repr__(self):
+        return f'Polynomial({self.coeffs})'
+    
+    def __str__(self):
+        # ATTENTION the way below will lead to the disappear of zero in the middle!!!
+        """
+        if len(self.coeffs) == 1:
+            return f'{self.coeffs[0]}'
+        else:
+            return str(Polynomial(self.coeffs[:-1:])) + f' + {self.coeffs[-1]}*x^{len(self.coeffs) - 1}'
+        """
+        if len(self.coeffs) == 1:
+            return f'{self.coeffs[0]}'
+
+        result = ''
+        for i,c in enumerate(self.coeffs):
+            result += f'{c}*x^{i} + ' if i != 0 else f'{c} + '
+        return result[:-3]
+    
+        
+
 
 
 def remove_duplicates(lnk):
@@ -43,7 +116,22 @@ def remove_duplicates(lnk):
     >>> lnk
     Link(1, Link(5))
     """
-    "*** YOUR CODE HERE ***"
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return
+    if lnk.first == lnk.rest.first:
+        lnk.rest = lnk.rest.rest
+        remove_duplicates(lnk)
+    
+    
+    remove_duplicates(lnk.rest)
+    """
+    if lnk.first is Link.empty or lnk.rest is Link.empty:
+            return
+    while lnk.rest is not Link.empty and lnk.first == lnk.rest.first:
+            lnk.rest = lnk.rest.rest
+        
+    remove_duplicates(lnk.rest)
+    """
 
 def reverse(lnk):
     """ Reverse a linked list.
@@ -60,7 +148,127 @@ def reverse(lnk):
     >>> a.first # Make sure you do not change first
     1
     """
-    "*** YOUR CODE HERE ***"
+
+    # Hum... I'm tired
+    """
+    核心原则：**只改 `rest`，不要 `Link(...)`，也不要交换 `first`**。下面四种都满足要求，提交时任选一个即可。
+
+### 1. 迭代三指针法（推荐）
+
+```python
+def reverse(lnk):
+    prev = Link.empty
+    cur = lnk
+
+    while cur is not Link.empty:
+        nxt = cur.rest      # 先保存后继，否则改完 rest 就找不到后面了
+        cur.rest = prev     # 真正的反转：改 rest
+        prev, cur = cur, nxt
+
+    return prev
+```
+
+`prev` 是已反转部分的头，`cur` 是当前待处理节点，`nxt` 是暂存的后继。
+
+---
+
+### 2. 尾递归写法
+
+```python
+def reverse(lnk):
+    def helper(prev, cur):
+        if cur is Link.empty:
+            return prev
+        nxt = cur.rest
+        cur.rest = prev
+        return helper(cur, nxt)
+
+    return helper(Link.empty, lnk)
+```
+
+逻辑和第 1 种一样，只是用递归参数保存 `prev / cur`。
+
+---
+
+### 3. 经典递归：先反转后半段，再把头接到尾部
+
+```python
+def reverse(lnk):
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+
+    new_head = reverse(lnk.rest)
+
+    # 此时 lnk.rest 是“已反转后半段”的头，也就是整个新链表的尾
+    lnk.rest.rest = lnk   # 让原来的尾指回当前节点
+    lnk.rest = Link.empty # 断开原来的边，避免成环
+
+    return new_head
+```
+
+以 `1 -> 2 -> 3` 为例：先得到 `3 -> 2`，再让 `2.rest = 1`，最后令 `1.rest = Link.empty`。
+
+---
+
+### 4. 头插法：不断把 `tail.rest` 摘下来插到最前面
+
+```python
+def reverse(lnk):
+    if lnk is Link.empty:
+        return lnk
+
+    tail = new_head = lnk  # 原头最终会变成尾
+
+    while tail.rest is not Link.empty:
+        node = tail.rest          # 待摘下的节点
+        tail.rest = node.rest     # tail 跳过 node
+        node.rest = new_head      # node 插到最前面
+        new_head = node
+
+    return new_head
+```
+
+`tail` 始终是原链表头节点，也就是反转后的尾节点；每次把紧跟它的节点搬到 `new_head` 前面。
+
+---
+
+### 对比
+
+| 写法 | 时间 | 额外空间 |
+|---|---:|---:|
+| 迭代三指针 | O(n) | O(1) |
+| 头插法 | O(n) | O(1) |
+| 尾递归 | O(n) | O(n) 递归栈 |
+| 经典递归 | O(n) | O(n) 递归栈 |
+
+四种实现都只在原节点上改 `rest`，不会触发题目里的 `"Do not steal chicken!"`，也不会改变 `a.first`。如果你的课程用 `None` 表示空链表，把代码里的 `Link.empty` 换成 `None` 即可。"""
+    # important question
+
+    """
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+    head = reverse(lnk.rest)
+    lnk.rest.rest = lnk
+    lnk.rest = Link.empty
+    return head
+    """
+    # 给出wzgg的一个屎山代码
+    a = lnk
+    if a == Link.empty or a.rest == Link.empty:
+        return a
+    if a.rest.rest == Link.empty:
+        b = a.rest
+        a.rest.rest = a
+        a.rest = Link.empty
+        return b
+
+    c = reverse(lnk.rest)
+    reverse(lnk)
+    return c
+    
+    
+    
+    
     
 def rotate_right(lnk):
     """Rotate the linked list one step to the right.
@@ -77,7 +285,112 @@ def rotate_right(lnk):
     >>> a.first   # Make sure original first not overwritten
     1
     """
-    "*** YOUR CODE HERE ***"
+    """
+def rotate_right(lnk):
+
+    #单指针找倒数第二个节点（推荐，最简洁）
+
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+
+    second_last = lnk
+    while second_last.rest.rest is not Link.empty:
+        second_last = second_last.rest
+
+    new_head = second_last.rest
+    second_last.rest = Link.empty
+    new_head.rest = lnk
+    return new_head
+
+    思路：
+        second_last 最终停在倒数第二个节点:new_head 是原尾节点。先断开倒数第二个节点和尾节点，再把尾节点接到原头节点前面。
+
+
+        
+
+def rotate_right(lnk):
+
+    #prev / cur 双指针
+
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+
+    prev, cur = lnk, lnk.rest
+    while cur.rest is not Link.empty:
+        prev, cur = cur, cur.rest
+
+    prev.rest = Link.empty
+    cur.rest = lnk
+    return cur
+
+
+    思路：
+        cur 最终是原尾节点，也就是新头；
+
+        prev 是倒数第二个节点；
+
+        先断开 prev.rest,再让 cur.rest = lnk。
+
+def rotate_right(lnk):
+
+    #递归找尾节点
+
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+
+    def helper(prev, cur):
+        if cur.rest is Link.empty:
+            prev.rest = Link.empty
+            cur.rest = lnk
+            return cur
+        return helper(cur, cur.rest)
+
+    return helper(lnk, lnk.rest)
+
+    
+    这个本质上是方案二的递归版。
+    优点是表达清楚；缺点是链表很长时可能超过 Python 递归深度，实际工程中不如循环稳妥。
+
+
+
+def rotate_right(lnk):
+
+    #先成环，再断开
+
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return lnk
+
+    tail = lnk
+    while tail.rest is not Link.empty:
+        tail = tail.rest
+
+    tail.rest = lnk          # 先接成环
+
+    new_tail = lnk
+    while new_tail.rest is not tail:
+        new_tail = new_tail.rest
+
+    new_tail.rest = Link.empty
+    return tail
+    
+    
+    思路：先把链表首尾相连成环，然后找到新的尾节点并断开。
+        也能满足要求，但中间会短暂成环，理解起来稍绕一些。
+
+
+    """
+    # 找到倒数第二个节点，断开，再把原尾节点接到原头前面
+    if lnk == Link.empty or lnk.rest == Link.empty:
+        return lnk
+
+    a, b = lnk, lnk.rest
+    while b.rest is not Link.empty:
+        a = b
+        b = a.rest
+
+    b.rest = lnk
+    a.rest = Link.empty
+    return b
 
 
 class Tree:
@@ -116,7 +429,7 @@ class Tree:
 
         return print_tree(self).rstrip()
     
-    def __eq__(self): # Does this line need to be changed?
+    def __eq__(self, other): # Does this line need to be changed?
         """Returns whether two trees are equivalent.
 
         >>> t1 = Tree(1, [Tree(2, [Tree(3), Tree(4)]), Tree(5, [Tree(6)]), Tree(7)])
@@ -131,7 +444,22 @@ class Tree:
         >>> t1 == t3 or t1 == t4 or t1 == t5
         False
         """
-        "*** YOUR CODE HERE ***"
+
+        """
+        if self.label !=  other.label:
+            return False
+        if not len(self.branches) == len(other.branches):
+            return False
+        for i in range(len(self.branches)):
+            if not self.branches[i] == other.branches[i]:
+                return False
+        return True
+        """
+        # one-liner again！
+        return (self.label == other.label
+                and len(self.branches) == len(other.branches)
+                and all(a == b for a, b in zip(self.branches, other.branches)))
+
         
         
 def is_bst(t):
@@ -159,8 +487,118 @@ def is_bst(t):
     >>> is_bst(t7)
     False
     """
-    "*** YOUR CODE HERE ***"        
 
+    # Some implements
+    """
+
+    # 递归
+
+    def is_bst(t, low=float('-inf'), high=float('inf')):
+    # 当前节点必须落在允许范围内
+    if not (low < t.label <= high):
+        return False
+
+    branches = t.branches
+
+    # 最多两个分支
+    if len(branches) > 2:
+        return False
+
+    # 叶子是合法 BST
+    if len(branches) == 0:
+        return True
+
+    # 只有一个分支：它既可能是左分支，也可能是右分支
+    if len(branches) == 1:
+        child = branches[0]
+        return (
+            is_bst(child, low, t.label) or
+            is_bst(child, t.label, high)
+        )
+
+    # 两个分支：左分支 <= t.label 右分支 > t.label
+    left, right = branches
+    return (
+        is_bst(left, low, t.label) and
+        is_bst(right, t.label, high)
+    )
+
+    # 迭代
+
+    def is_bst(t):
+    stack = [(t, float('-inf'), float('inf'))]
+
+    while stack:
+        node, low, high = stack.pop()
+
+        # 当前节点必须满足 low < label <= high
+        if not (low < node.label <= high):
+            return False
+
+        branches = node.branches
+
+        if len(branches) > 2:
+            return False
+
+        if len(branches) == 0:
+            continue
+
+        if len(branches) == 1:
+            child = branches[0]
+
+            # 单分支根据 child.label 判断它只能作为左分支还是右分支
+            if child.label <= node.label:
+                stack.append((child, low, node.label))
+            else:
+                stack.append((child, node.label, high))
+
+        else:
+            left, right = branches
+
+            # 左分支所有标签必须在 (low, node.label]
+            stack.append((left, low, node.label))
+
+            # 右分支所有标签必须在 (node.label, high]
+            stack.append((right, node.label, high))
+
+    return True
+    """
+    def helper(node, low, high):
+        # 当前节点必须满足 low < node.label <= high
+        if low is not None and node.label <= low:
+            return False
+        if high is not None and node.label > high:
+            return False
+
+        branches = node.branches
+        n = len(branches)
+
+        # 最多两个分支
+        if n > 2:
+            return False
+
+        # 叶子：上面的范围检查已经通过，所以合法
+        if n == 0:
+            return True
+
+        # 只有一个分支：它既可能是左分支，也可能是右分支
+        if n == 1:
+            child = branches[0]
+
+            if child.label <= node.label:
+                # 只能作为左分支，范围变成 (low, node.label]
+                return helper(child, low, node.label)
+            else:
+                # 只能作为右分支，范围变成 (node.label, high]
+                return helper(child, node.label, high)
+
+        # 两个分支
+        left, right = branches
+        return (
+            helper(left, low, node.label) and
+            helper(right, node.label, high)
+        )
+    return helper(t, None, None)
 
 def count_coins(total, denominations):
     """
@@ -224,7 +662,50 @@ def count_coins_tree(total, denominations):
                                 1, [1, 5, 10, 25]
                                   1
     """
-    "*** YOUR CODE HERE ***"
+    """
+
+    if total == 0:
+        return Tree('1')
+    if total < 0 or not denominations:
+        return None
+
+    without_current = count_coins_tree(total, denominations[1:])
+    with_current = count_coins_tree(total - denominations[0], denominations)
+
+    branches = [b for b in (without_current, with_current) if b is not None]
+
+    if not branches:
+        return None
+
+    return Tree(f'{total}, {denominations}', branches)
+
+    """
+    #上方为ds的简化版
+
+    t = Tree(None)
+    if total == 0:
+        return Tree('1')
+    if total < 0:
+        return None
+    if len(denominations) == 0:
+        return None
+    
+    with_current = count_coins(total - denominations[0], denominations)
+
+    without_current = count_coins(total, denominations[1:])
+
+    if without_current != 0:
+        t.label = f'{total}, {denominations}'
+        t.branches.append(count_coins_tree(total, denominations[1:]))
+
+    if with_current != 0:
+        t.label = f'{total}, {denominations}'
+        t.branches.append(count_coins_tree(total - denominations[0], denominations))
+
+    return t if t.branches else None #无解时返回None, 而非 Tree(None)
+
+    
+
 
 
 ##########################
@@ -244,9 +725,110 @@ def has_cycle(lnk):
     >>> has_cycle(lnk)
     True
     """
-    "*** YOUR CODE HERE ***"
 
 
+
+
+
+"""
+def balanced_weight(t):
+    #已平衡则返回该子树的总重量；不平衡返回 None
+    if t.is_leaf():
+        return t.label                      # 叶子：重量就是 label
+
+    weights = []
+    for b in t.branches:
+        w = balanced_weight(b)
+        if w is None:                       # 子树不平衡，整棵一定不平衡
+            return None
+        weights.append(w)
+
+    if any(w != weights[0] for w in weights):   # 各分支重量必须相同
+        return None
+
+    return t.label + sum(weights)           # 别忘了自己的 label
+
+
+def whether_it_is_balanced(t):
+    return balanced_weight(t) is not None
+
+    
+
+def whether_it_is_balanced(t):
+    def w(t):
+        if t.is_leaf():
+            return t.label
+        ws = [w(b) for b in t.branches]
+        if None in ws or len(set(ws)) > 1:   # 有子不平衡，或分支重量不等
+            # set 可以去重
+            return None
+        return t.label + sum(ws)
+    return w(t) is not None
+
+    
+
+    更加紧凑！
+
+
+def whether_it_is_balanced(t):
+    def w(t):
+        if t.is_leaf():
+            return t.label
+        ws = [w(b) for b in t.branches]
+        return t.label + sum(ws) if None not in ws and len(set(ws)) == 1 else None
+    return w(t) is not None
+"""
+
+"""
+    #哦不不，事实上是完全没有必要的一件事情
+def balance_tree(t):
+    def weight(t):
+        if t.is_leaf():
+            return t.label
+        return t.label + sum(weight(b) for b in t.branches)
+
+    def balanced(t):
+        if t.is_leaf():
+            return True
+        ws = [weight(b) for b in t.branches]
+        return len(set(ws)) == 1 and all(balanced(b) for b in t.branches)
+
+    def fix_one(t):
+        后序找到最深的、分支重量不等的节点，给最轻分支的根补 1。
+        if t.is_leaf():
+            return False
+        for b in t.branches:          # 先修孩子
+            if fix_one(b):
+                return True
+        
+        此处 True 和 False 的使用有点类似于冒泡泡，发现
+        True = 我在我的子树里找到了一个违规并补了 1 个 gift，本轮到此为止；
+        False = 我这棵子树（以 t 为根）已经平衡了，本轮一个 gift 都没补。
+            
+        “
+        孩子返回 True（补了）：立刻 return True，把“本轮已补”这个信号沿递归链冒泡回根，
+        本轮不再检查别的分支、也不再管自己；
+
+        孩子返回 False（没补）：继续 for 下一个孩子；
+
+        所有孩子都 False，才轮到检查自己；自己也没补，就把 False 继续往上传。
+        
+        ”
+        ws = [weight(b) for b in t.branches]
+        if len(set(ws)) > 1:          # 再修自己
+            m = max(ws)
+            for b in t.branches:
+                if weight(b) < m:
+                    b.label += 1
+                    return True
+        return False
+
+    while not balanced(t):
+        fix_one(t)
+    # 原地修改，不 return
+ -> P5 (optional, 1pts): 1
+ -> P6 (optional, 1pts): 0 (TLE) 不出所料
+"""
 def balance_tree(t):
     """Balance a tree.
 
@@ -255,7 +837,32 @@ def balance_tree(t):
     >>> t1
     Tree(1, [Tree(2, [Tree(3), Tree(3), Tree(3)]), Tree(3, [Tree(4), Tree(4)])])
     """
-    "*** YOUR CODE HERE ***"
+    """
+
+    既不是 DFS 搜索（没有试错），也不是 DP（没有重叠子问题/状态转移表），而是树上的后序贪心构造。
+    P6 的 Hint 1“每个节点只扫描常数次”正好就是后序遍历的复杂度特征；
+    Hint 2 的“加属性记忆”是给那些重复求子树重量的解法用的缓存，
+    我们的版本把重量存在返回值里，等价于记忆，所以一行属性都不用加就过了 P6。
+
+    #每个节点做一次局部贪心（对齐到 max），就是全局最优，不需要回溯、不需要尝试多种方案、不需要状态表。
+
+    """
+    def helper(t):
+        if t.is_leaf():
+            return t.label
+
+        weights = [helper(b) for b in t.branches]   # 先让每个分支自己平衡
+        target = max(weights)                        # 目标：对齐到最重的分支
+
+        for b, w in zip(t.branches, weights):
+            b.label += target - w                    # 补在分支根节点上
+            # 这样 b 的总重量变成 target，且 b 内部仍然平衡
+
+        return t.label + target * len(t.branches)
+
+    helper(t)
+
+    
 
 
 #####################
