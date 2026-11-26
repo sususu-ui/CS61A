@@ -3,6 +3,8 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# videos
+*.mp4
 # C extensions
 *.so
 
@@ -219,3 +221,4 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 "homework/*.mp4" 
+"*.mp4" 

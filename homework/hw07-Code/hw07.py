@@ -725,8 +725,44 @@ def has_cycle(lnk):
     >>> has_cycle(lnk)
     True
     """
+    """
+    当链表有环、但头节点不在环上时，内层 while b is not Link.empty 会死循环。
 
+    if lnk is Link.empty or lnk.rest is Link.empty:
+        return False
+    
+    a = lnk
+    while a is not Link.empty:
+        b = a.rest
 
+        while b is not Link.empty:
+            if b is a:
+                return True
+            b = b.rest
+        
+        a = a.rest
+
+    return False
+    """
+
+    """
+    
+    快慢指针（Floyd 判圈算法）能成立，核心是两点：
+
+    无环时，快指针一定会先走到 Link.empty，于是循环结束，返回 False。
+
+    有环时，快慢指针都会进入环；进入环后，快指针每轮比慢指针多走一步，相当于在环里“追击”慢指针，最终一定追上。
+    
+    """
+    slow = fast = lnk
+
+    while fast is not Link.empty and fast.rest is not Link.empty:
+        slow = slow.rest
+        fast = fast.rest.rest
+        if slow is fast:
+            return True
+
+    return False
 
 
 
