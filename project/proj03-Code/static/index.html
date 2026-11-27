@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>
+            Ants vs SomeBees!
+        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/style.css">
+
+    </head>
+
+    <body class="menu">
+        <div class="main-window">
+            <div></div>
+
+            <div class="middle-section">
+                <div class="white-space"></div>
+
+                <div class="game-window">
+                    <div class="hud">
+                        <div class="hud-food"> Food: 0 </div>
+                        <div class="hud-deploys" hidden> Deploys: 0 </div>
+                        <div class="hud-turn"> Turn: 0 </div>
+                        <div class="hud-controls">
+                            <div class="hud-timer">
+                                <div class="hud-timer-dial"></div>
+                                <div class="hud-timer-text">ant</div>
+                            </div>
+                            <div class="hud-speed">
+                                <button class="hud-speed-btn" type="button">1x</button>
+                                <button class="hud-skip-btn" type="button">SKIP</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="selector"></div>
+                    <div class="board-stage">
+                        <div class="board"></div>
+                        <div class="boss-bar" hidden>
+                            <span class="boss-bar-name">Heart of Hive</span>
+                            <div class="boss-bar-track"><div class="boss-bar-fill"></div></div>
+                        </div>
+                    </div>
+                    <div class="controls-hint">Left click to deploy, right click to remove</div>
+                </div>
+                
+                <div class="white-space"></div>
+
+            </div> <!-- middle-section -->
+
+            <div></div>
+        </div> <!-- main-window -->
+        <div class="menu-window">
+            <div class="level-grid"></div>
+            <button class="menu-button menu-start-custom">CUSTOM</button>
+            <button class="menu-button menu-workshop" type="button" hidden>WORKSHOP</button>
+        </div>
+        <div class="game-over-alert"></div>
+
+        <audio id="backgroundmusic" loop>
+            <source src="/assets/backgroundmusic.mp3" type="audio/mpeg">
+        </audio>
+        <script src="/script.js"></script>
+    </body>
+</html>
+
+
+<!--
+Music from (copyright free, royalty free):
+TheRelaxedMovement at https://www.youtube.com/watch?v=x07EgsEoe0U
+-->

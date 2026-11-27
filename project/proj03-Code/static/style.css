@@ -1,0 +1,834 @@
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+.main-window {
+    display: grid;
+    grid-template-columns: 1fr 15fr 1fr;
+    background-color: rgb(30, 30, 30);
+}
+
+.middle-section {
+    display: grid;
+    grid-template-rows: 1fr 15fr 1fr;
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+}
+
+.game-window {
+    container-type: size;
+    border-style: none;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/assets/background.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex; 
+    flex-direction: column;
+}
+
+
+.hud {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6cqi;
+    margin: 2.4cqi 0 1.2cqi;
+}
+
+.hud-food, .hud-turn, .hud-deploys, .hud-speed, .hud-skip-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 20px;
+    border: none;
+    border-radius: 6px;
+    width: 120px;
+    height: 50px;
+}
+
+.hud-food {
+    background-color: rgb(13, 99, 180);
+    color: white;
+}
+
+.hud-turn {
+    background-color: rgb(112, 12, 199);
+    color: white;
+}
+
+/* only shown when the level caps deploys per turn */
+.hud-deploys {
+    background-color: rgb(201, 118, 16);
+    color: white;
+    width: 150px;
+}
+
+.hud-deploys[hidden] {
+    display: none;
+}
+
+/* beat indicator: fills up until the next action fires */
+.hud-timer {
+    --p: 0;                 /* fill progress, 1 = full circle */
+    position: relative;
+    z-index: 1;             /* sits above the bar whose left edge it covers */
+    flex: none;
+    width: var(--dial);
+    height: var(--dial);
+}
+
+.hud-timer-dial {
+    --color-ant: rgb(85, 250, 109);
+    --color-bee: rgb(213, 80, 35);
+    --color: none;
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--color) calc(var(--p) * 360deg),
+        rgba(0, 0, 0, 0.45) 0
+    );
+    -webkit-mask: radial-gradient(closest-side, #0000 62%, #000 63%);
+    mask: radial-gradient(closest-side, #0000 62%, #000 63%);
+}
+
+.hud-timer-text {
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 16px;
+    color: white;
+    pointer-events: none;
+}
+
+/* the dial and the switch form one shape: a large round head on the left with a
+   rounded bar running out of it on the right */
+.hud-controls {
+    --dial: 88px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+/* the bar starts at the centre of the dial, so the round head always covers its
+   left edge -- the overlap is the dial radius, not a number picked by eye */
+.hud-speed {
+    flex: none;
+    align-self: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: auto;
+    height: 60px;
+    margin-left: calc(var(--dial) / -2);
+    padding: 0 10px 0 calc(var(--dial) / 2 + 10px);
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 0 999px 999px 0;
+    color: white;
+    line-height: 1;
+
+    -webkit-mask: radial-gradient(circle calc(var(--dial) / 2) at 0 50%,
+                                  #0000 calc(var(--dial) / 2), #000 0);
+    mask: radial-gradient(circle calc(var(--dial) / 2) at 0 50%,
+                          #0000 calc(var(--dial) / 2), #000 0);
+}
+
+/* shows the current rate and cycles it on click */
+.hud-speed-btn {
+    flex: none;
+    box-sizing: border-box;
+    min-width: 58px;
+    height: 48px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 8px;
+    background: rgb(85, 250, 109);
+    color: rgb(8, 40, 16);
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.hud-speed-btn:hover, .hud-skip-btn:hover {
+    filter: brightness(1.35);
+}
+
+/* skip rides inside the same bar, right next to the speed switch */
+.hud-skip-btn {
+    flex: none;
+    box-sizing: border-box;
+    width: 78px;
+    height: 48px;
+    padding: 0;
+    border-radius: 999px;
+    background-color: rgb(245, 233, 67);
+    color: rgb(52, 45, 0);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* the boss reports here: one pip per point of health needs more than a cell */
+.boss-bar {
+    --boss-max: 100;
+    position: absolute;
+    left: 2cqi;
+    right: 2cqi;
+    bottom: 0.6cqi;
+    display: flex;
+    align-items: center;
+    gap: 1.2cqi;
+}
+
+.boss-bar[hidden] { display: none; }
+
+.boss-bar-name {
+    flex: none;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 1.2cqi;
+    letter-spacing: 0.04em;
+    color: white;
+    white-space: nowrap;
+    text-shadow: 0 0 0.2cqi rgb(0, 0, 0);
+}
+
+.boss-bar-track {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    height: 1.1cqi;
+    background: rgb(0, 0, 0);
+    border: 0.15cqi solid rgb(0, 0, 0);
+}
+
+.boss-bar-fill {
+    height: 100%;
+    background: rgb(170, 32, 42);
+    transform-origin: left center;
+    scale: var(--fill, 1) 1;
+}
+
+/* one tick per point of health, whatever the max is */
+.boss-bar-track::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(90deg,
+        transparent 0 calc(100% / var(--boss-max) - 1px),
+        rgba(0, 0, 0, 0.55) calc(100% / var(--boss-max) - 1px) calc(100% / var(--boss-max)));
+}
+
+.selector {
+    --max-items: 16;
+
+    flex: 0 0 auto;
+    display: flex;
+    height: 10cqi;
+	gap: 0.2cqi;
+    padding: 0 2cqi;
+    z-index: 10;
+}
+
+.selector > div {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: calc((100% - (var(--max-items) - 1) * 0.2cqi) / var(--max-items));
+}
+
+.selector-item {
+    position: relative;
+    box-sizing: content-box;
+	border: 0.2cqi solid rgba(0, 0, 0, 0.7);
+    border-radius: 0.5cqi;
+	background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.selector-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.selector-item[data-remove="true"] {
+    background-color: rgba(194, 63, 63, 0.319);
+}
+
+.selector-item[data-remove="true"][data-selected="true"] {
+    border-color: rgb(235, 80, 80);
+}
+
+.selector-item[data-available="false"]::after {
+    opacity: 1;
+}
+
+.selector-item[data-available="false"] {
+    filter: saturate(0.6);
+}
+
+.selector-item:hover {
+    border: 0.2cqi solid rgb(255, 255, 0); 
+    cursor: pointer;
+}
+
+.selector-item[data-selected="true"] {
+    border: 0.2cqi solid rgb(0, 255, 0); 
+    top: -1cqi;
+}
+
+.selector-item-cost {
+	align-self: flex-end;
+    flex: none;
+    color: white;
+    font-size: 1cqi;
+}
+
+.selector-item-img {
+    --img: none;
+    flex: 1;
+    min-height: 0;
+
+    background-image: var(--img);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.selector-item-name {
+	align-self: stretch;
+    flex: none;
+    color: white;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1cqi;
+}
+
+/* one line under the selector, flush left */
+.controls-hint {
+    flex: 0 0 auto;
+    padding: 0 2cqi;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 1.2cqi;
+    line-height: 1.6;
+    color: rgb(255, 255, 255);
+    opacity: 50%;
+    /* text-shadow: 0 0 0.2cqi rgb(0, 0, 0); */
+}
+
+.board-stage {
+    --stage-pad-x: 4vw;
+    --stage-pad-y: 4vh;
+    container-type: size;
+    position: relative;      /* the boss bar floats in the bottom padding */
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: var(--stage-pad-x);
+    padding-right: var(--stage-pad-x);
+    padding-top: var(--stage-pad-y);
+    padding-bottom: var(--stage-pad-y);
+    overflow: hidden;   /* backstop: the zone bands stop at the padding box */
+}
+
+.board {
+    --cols: 3;
+	--rows: 4;
+	--center-row: 2;
+	--cell-w: calc((100cqw - (var(--cols) - 1) * var(--col-gap)) / var(--cols));
+    --cell-h: calc((100cqh - (var(--rows) - 1) * var(--row-gap)) / var(--rows));
+    --cell: min(var(--cell-w), var(--cell-h));
+	--border: 0cqi;
+	--row-gap: 0cqi;
+	--col-gap: 0cqi;
+    --board-w: calc(var(--cols) * var(--cell) + (var(--cols) - 1) * var(--col-gap));
+    --board-h: calc(var(--rows) * var(--cell) + (var(--rows) - 1) * var(--row-gap));
+    /* one zone column, plus the space the board leaves on that side of the
+       stage: from the board's inner edge the band reaches the stage edge */
+    --side-w: calc(var(--cell) + (100cqw - var(--board-w)) / 2 + var(--stage-pad-x));
+    box-sizing: content-box;
+	width:  var(--board-w);
+  	height: var(--board-h);
+
+    display: grid;
+	grid-template-rows: repeat(var(--rows), 1fr);
+	grid-template-columns: repeat(var(--cols), 1fr);
+    border: var(--border) solid;
+	/* background-color: white; */
+    row-gap: var(--row-gap);
+    column-gap: var(--col-gap);
+}
+
+.place {
+    --col: 0;
+    --row: 0;
+    --tile: "0";
+    --img: none;
+    background-image: var(--img);
+    background-size: 100% 100%; 
+    background-position: center;
+    background-repeat: no-repeat;
+    grid-row: var(--row);
+    grid-column: var(--col);
+}
+
+.place:hover {
+    box-shadow: inset 0 0 0 0.2cqi rgb(255, 255, 0); 
+    cursor: pointer;
+}
+
+/* the base column is tiled like a place but nothing can be put in it */
+.place-end {
+    pointer-events: none;
+}
+
+.base-zone,
+.hive-zone {
+    grid-row: 1 / -1;      /* span every row, so 50% is the board's true middle */
+    position: relative;
+    /* z-index: 5; */
+    pointer-events: none;
+}
+
+.base-zone { grid-column: 1; }
+.hive-zone { grid-column: var(--cols); }
+
+.zone-art {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    /* exactly the space the board leaves on its own side of the stage */
+    width: var(--side-w);
+    /* cqh is the stage content box, so add the padding back to reach its edges */
+    height: calc(100cqh + 2 * var(--stage-pad-y));
+    /* place holder */
+    background-image: url('/assets/fog.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* the band starts at the outer edge of the playable columns, covers the zone's
+   own column, and runs to the stage edge; cover keeps the side nearest the
+   board and drops whatever spills past the far edge */
+.hive-zone .zone-art {
+    left: 0;
+    background-image: url('/assets/hive.png');
+    background-position: 25% center;
+}
+.base-zone .zone-art {
+    /* the base column has its own tiles, so this band starts outside the board */
+    right: 100%;
+    width: calc(var(--side-w) - var(--cell));
+    background-position: center;
+}
+
+/* anchored to the centre of its cell, free to overflow the cell box */
+.hive-body {
+    position: absolute;
+    left: 75%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1em;
+    white-space: nowrap;
+}
+
+.hive-count {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: calc(var(--cell) * 0.55);
+    line-height: 1;
+    color: white;
+    text-shadow: 0 0 0.3cqi rgb(0, 0, 0);
+}
+
+.hive-label {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: calc(var(--cell) * 0.2);
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 0 0.2cqi rgb(0, 0, 0);
+}
+
+/* .insects {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: repeat(var(--rows), 1fr);
+    grid-template-columns: repeat(var(--cols), 1fr);
+    row-gap: var(--row-gap);
+    column-gap: var(--col-gap);
+    pointer-events: none;
+} */
+
+.insect {
+    --col: 0;
+    --row: 0;
+    --img: none;
+    --dx: 0%;
+    --dy: 0%;
+    --spr-xoff: 0%;
+    --spr-yoff: 0%;
+
+    grid-row: var(--row);
+    grid-column: var(--col);
+    pointer-events: none;
+
+    position: relative;
+    translate: var(--dx) var(--dy);
+}
+
+.insect[data-is-ant="false"] { z-index: 4; }
+.insect[data-is-container="true"] { z-index: 3; }
+
+.insect::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    --slow-tint: transparent;
+    --scare-tint: transparent;
+    --poison-tint: transparent;
+    --buffed-tint: transparent;
+    --wax-tint: transparent;
+
+    background-image: var(--img);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    translate: var(--spr-xoff) var(--spr-yoff);
+}
+
+/* 至少一个状态时才铺多层，无状态零开销 */
+.insect:is(.slow, .scare, .poison, .buffed, .wax)::before {
+    background-image:
+        linear-gradient(var(--wax-tint),    var(--wax-tint)),
+        linear-gradient(var(--buffed-tint), var(--buffed-tint)),
+        linear-gradient(var(--slow-tint),   var(--slow-tint)),
+        linear-gradient(var(--scare-tint),  var(--scare-tint)),
+        linear-gradient(var(--poison-tint), var(--poison-tint)),
+        var(--img);
+    background-blend-mode: normal, soft-light, multiply, multiply, multiply, normal;
+    -webkit-mask-image: var(--img);
+            mask-image: var(--img);
+    -webkit-mask-size: contain;
+            mask-size: contain;
+    -webkit-mask-position: center;
+            mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+}
+
+.insect.slow::before   { --slow-tint:   #4f77c6; }
+.insect.scare::before  { --scare-tint:  #5e1066; }
+.insect.poison::before { --poison-tint: #6edd3a; }
+.insect.buffed::before { --buffed-tint: #cf3d23; }
+.insect.wax::before {
+    --wax-tint: rgba(247, 227, 160, calc(var(--wax-ratio, 1) * 0.8));
+}
+
+/* preview of the ant the next click would place */
+.ghost {
+    opacity: 0.45;
+    filter: saturate(0.5);
+}
+
+.bullet {
+    --row: 0;
+    --col: 0;
+    --damage: 0;
+    --base: 50%;
+    --incr: 25%;
+    --img: url('/assets/leaf.png');
+
+    z-index: 5;
+
+    grid-row: var(--row);
+    grid-column: var(--col);
+
+    background-image: var(--img);
+    background-size: calc(var(--base) + var(--incr) * (var(--damage) - 1));
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    position: relative;
+}
+
+.food {
+    --row: 0;
+    --col: 0;
+
+    z-index: 5;
+
+    grid-row: var(--row);
+    grid-column: var(--col);
+
+    background-image: url('/assets/leaf.png');
+    background-size: 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    position: relative;
+}
+
+.insect-hit {
+    position: absolute;
+    inset: 0;
+    background: rgb(255, 0, 0);
+    pointer-events: none;
+
+    -webkit-mask-image: var(--img);
+    mask-image: var(--img);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    translate: var(--spr-xoff) var(--spr-yoff);
+}
+
+.insect-hit.recover {
+    background: rgb(0, 255, 0);
+}
+
+.insect-health {
+    --line: 0.05cqi;
+    position: absolute;
+    /* stack upward when several insects share a cell */
+    bottom: calc(6% - var(--slot, 0) * var(--cell) * 0.05);
+    left: 15%;
+    right: 15%;
+    height: 0.2cqi;
+    box-sizing: content-box;
+    background: black;
+    border: var(--line) solid black;
+    display: flex;
+    flex-direction: row;
+    gap: calc(var(--line) * var(--gapper, 1));
+    opacity: 0;
+    /* transition: opacity 0.5s ease; */
+}
+
+.insect-health.is-visible {
+    opacity: 0.7;
+}
+
+/* the boss reports in the HUD bar, so the cell keeps only the sprite */
+.insect.boss .insect-health {
+    display: none;
+}
+
+.insect-health-fill {
+    --color-ant: rgb(74, 186, 74);
+    --color-bee: rgb(213, 49, 49);
+    --color: none;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+
+    background-image: linear-gradient(var(--color), var(--color));
+    background-repeat: no-repeat;
+    background-size: calc(var(--fill, 0) * 100%) 100%;
+}
+
+.insect-damage {
+    position: absolute;
+    left: 50%;
+    /* same stagger as the health bar, but rising from the top */
+    top: calc(var(--slot, 0) * var(--cell) * 0.2);
+    color: red;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 2vh;
+    white-space: nowrap;
+    pointer-events: none;
+}
+/* ported from legacy showEndGameAlert: card fades in while the board dims */
+.game-over-alert {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 150px;
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 40px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease-in-out;
+    z-index: 20;
+}
+
+.game-over-alert[data-result="win"] {
+    background-color: rgba(30, 200, 50, 1);
+}
+
+.game-over-alert[data-result="lose"] {
+    background-color: rgba(190, 40, 50, 1);
+}
+
+body.game-over .game-over-alert {
+    opacity: 0.9;
+}
+
+body.game-over .main-window {
+    transition: filter 2s ease-in-out;
+    filter: brightness(35%);
+}
+
+body.menu .main-window {
+    visibility: hidden;
+}
+
+body.menu {
+    background-image: url('/assets/splash.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+/* a column of menu buttons pinned to the left edge */
+.menu-window {
+    --menu-w: clamp(150px, 13vw, 230px);
+    --levels-per-row: 5;   /* how many level buttons sit in one row */
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: clamp(10px, 1.6vh, 20px);
+    padding-left: clamp(40px, 10vw, 300px);
+}
+
+body:not(.menu) .menu-window {
+    display: none;
+}
+
+/* same box as the hud readouts, so a new option just drops in */
+.menu-button {
+    box-sizing: border-box;
+    width: var(--menu-w);
+    height: clamp(44px, 6vh, 64px);
+    border-radius: clamp(6px, 0.8vh, 10px);
+    font-size: clamp(15px, 2.2vh, 24px);
+    padding: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    letter-spacing: 0.04em;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.menu-button:hover {
+    filter: brightness(0.85);
+}
+
+/* the flex display above would otherwise swallow the hidden attribute */
+.menu-button[hidden] {
+    display: none;
+}
+
+/* jumps to the workshop page, sits under the custom entry */
+.menu-workshop {
+    background-color: rgba(30, 120, 60, 0.85);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+    color: white;
+    align-self: center;      /* centred on the level grid above */
+}
+
+/* built-in levels: square number buttons laid out in a grid */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--levels-per-row), auto);
+    gap: clamp(8px, 1.2vh, 16px);
+    margin-bottom: clamp(12px, 2.2vh, 28px);
+}
+
+.level-button {
+    box-sizing: border-box;
+    width: clamp(46px, 5.4vh, 68px);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    border-radius: clamp(6px, 0.8vh, 10px);
+    background-color: rgba(30, 120, 60, 0.85);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+    font-size: clamp(16px, 2.4vh, 26px);
+}
+
+.level-button:hover {
+    filter: brightness(1.2);
+}
+
+/* layout switch: one button that cycles, styled apart from the difficulties */
+.menu-layout {
+    background-color: rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+    margin-bottom: clamp(10px, 2.4vh, 32px);
+}
+
+.start-easy {
+    background-color: rgb(45, 190, 60);
+}
+
+.start-normal {
+    background-color: rgb(15, 112, 168);
+}
+
+.start-hard {
+    background-color: rgb(103, 39, 155);
+}
+
+.start-extra-hard {
+    background-color: rgb(181, 25, 36);
+}
+
+.menu-start-custom {
+    background-color: rgba(30, 120, 60, 0.85);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+    color: white;
+    margin-top: clamp(10px, 2.4vh, 32px);
+    align-self: center;      /* centred on the level grid above */
+}

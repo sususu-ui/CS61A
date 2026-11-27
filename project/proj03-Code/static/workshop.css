@@ -1,0 +1,594 @@
+:root {
+    --ws-bg: #f3f6f9;
+    --ws-panel: #ffffff;
+    --ws-panel-hi: #e9eff5;
+    --ws-line: #d5dee7;
+    --ws-text: #1a222c;
+    --ws-dim: #68737f;
+    --ws-accent: #15803d;
+    --ws-accent-soft: #dcfce7;
+    --ws-danger: #b91c1c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--ws-bg);
+    color: var(--ws-text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.ws-bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 24px;
+    background: var(--ws-panel);
+    border-bottom: 1px solid var(--ws-line);
+}
+
+.ws-title {
+    margin: 0;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+}
+
+.ws-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ws-identity {
+    font-size: 13px;
+    color: var(--ws-dim);
+}
+
+.ws-button {
+    padding: 7px 15px;
+    border: 1px solid var(--ws-line);
+    border-radius: 8px;
+    background: var(--ws-panel);
+    color: var(--ws-text);
+    font-size: 13px;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ws-button:hover {
+    border-color: var(--ws-accent);
+    color: var(--ws-accent);
+}
+
+.ws-button[hidden] {
+    display: none;
+}
+
+.ws-button.danger:hover {
+    border-color: var(--ws-danger);
+    color: var(--ws-danger);
+}
+
+/* the lists view is a page with a sticky toolbar over two columns */
+[data-view="lists"][hidden] {
+    display: none;
+}
+
+.ws-tools {
+    position: sticky;
+    top: 58px;                 /* the height of .ws-bar, so nothing shows through */
+    z-index: 1;
+    display: grid;
+    /* the same two lanes as .ws-columns, so each pager sits over its own list */
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 10px 24px 12px;
+    background: var(--ws-bg);
+    border-bottom: 1px solid var(--ws-line);
+}
+
+.ws-lane {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: flex-end;  /* pagers share the bottom line of the strip */
+    min-width: 0;
+}
+
+.ws-lane-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ws-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    /* each column stands on its own; the two are not lined up on purpose */
+    align-items: start;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 18px 24px 48px;
+}
+
+/* one lane and one column per row when there is no width for two */
+@media (max-width: 900px) {
+    .ws-tools,
+    .ws-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ws-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ws-dim);
+}
+
+.ws-filter {
+    flex: none;
+    /* last in its row, so it sits against the right edge */
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    cursor: pointer;
+}
+
+.ws-filter[hidden] {
+    display: none;
+}
+
+.ws-column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* both columns carry one of these, so the two lists start on the same line */
+.ws-search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.ws-select,
+.ws-input {
+    padding: 7px 10px;
+    border: 1px solid var(--ws-line);
+    border-radius: 8px;
+    background: var(--ws-panel);
+    color: var(--ws-text);
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.ws-select {
+    flex: none;
+    cursor: pointer;
+}
+
+.ws-input {
+    flex: 1 1 140px;
+    min-width: 120px;
+}
+
+.ws-input::placeholder {
+    color: var(--ws-dim);
+}
+
+.ws-select:focus,
+.ws-input:focus {
+    outline: none;
+    border-color: var(--ws-accent);
+}
+
+.ws-search .ws-button {
+    flex: none;
+}
+
+.ws-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 14px;
+    border-left: 3px solid var(--ws-accent);
+    border-radius: 8px;
+    background: var(--ws-accent-soft);
+    color: var(--ws-text);
+    font-size: 12px;
+}
+
+.ws-result[hidden] {
+    display: none;
+}
+
+.ws-result-clear {
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--ws-accent);
+    font-family: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.ws-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ws-pager {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    /* as tall as a select, so both pagers share a line */
+    min-height: 35px;
+}
+
+.ws-page {
+    min-width: 30px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--ws-line);
+    border-radius: 8px;
+    background: var(--ws-panel);
+    color: var(--ws-text);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ws-page:hover:not(:disabled) {
+    border-color: var(--ws-accent);
+    color: var(--ws-accent);
+}
+
+.ws-page:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.ws-page-current {
+    border-color: var(--ws-accent);
+    background: var(--ws-accent-soft);
+    font-weight: 700;
+}
+
+.ws-page-gap {
+    border-color: transparent;
+    background: none;
+    color: var(--ws-dim);
+}
+
+.ws-note {
+    padding: 16px;
+    border: 1px dashed var(--ws-line);
+    border-radius: 10px;
+    background: var(--ws-panel);
+    color: var(--ws-dim);
+    font-size: 13px;
+}
+
+/* the whole head is the toggle, so no extra button is needed */
+.ws-row {
+    border: 1px solid var(--ws-line);
+    border-radius: 10px;
+    background: var(--ws-panel);
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+}
+
+.ws-row:hover {
+    border-color: #b9c6d3;
+}
+
+.ws-row-open {
+    border-color: var(--ws-accent);
+}
+
+.ws-row-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    /* the like pill is taller than the title, so a floor keeps both
+       columns on the same row height */
+    min-height: 46px;
+    padding: 11px 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ws-row-open .ws-row-head {
+    background: var(--ws-accent-soft);
+}
+
+.ws-row-head::after {
+    content: "";
+    flex: none;
+    align-self: center;
+    width: 0;
+    height: 0;
+    border-left: 6px solid var(--ws-dim);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform 0.15s ease;
+}
+
+.ws-row-open .ws-row-head::after {   
+    transform: rotate(90deg);
+    border-left-color: var(--ws-accent);
+}
+
+.ws-id {
+    flex: none;
+    width: 112px;
+    padding: 2px 6px;
+    border: 1px solid var(--ws-line);
+    border-radius: 5px;
+    background: var(--ws-panel-hi);
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    text-align: center;
+    color: var(--ws-dim);
+    /* the head is user-select: none; the id is the one thing meant to be copied */
+    user-select: text;
+    cursor: text;
+}
+
+.ws-id::selection {
+    background: var(--ws-accent-soft);
+    color: var(--ws-text);
+}
+
+/* pill: rounded ends, a heart and the count, filled in once liked */
+.ws-like {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border: 1px solid var(--ws-line);
+    border-radius: 999px;
+    background: var(--ws-panel);
+    color: var(--ws-dim);
+    font-family: inherit;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.ws-like:hover:not(:disabled) {
+    border-color: var(--ws-danger);
+    color: var(--ws-danger);
+}
+
+.ws-like-heart {
+    font-size: 11px;
+    line-height: 1;
+}
+
+.ws-like-on {
+    border-color: var(--ws-danger);
+    background: #fee2e2;
+    color: var(--ws-danger);
+}
+
+.ws-like:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ws-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-author {
+    flex: none;
+    max-width: 140px;
+    font-size: 13px;
+    color: var(--ws-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-date {
+    flex: none;
+    font-size: 12px;
+    color: var(--ws-dim);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ws-date[hidden] {
+    display: none;
+}
+
+.ws-row-body {
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--ws-line);
+}
+
+.ws-row-body[hidden] {
+    display: none;
+}
+
+.ws-desc {
+    margin: 0 0 10px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.ws-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 14px;
+    margin: 0 0 10px;
+    font-size: 13px;
+}
+
+.ws-facts dt {
+    color: var(--ws-dim);
+}
+
+.ws-facts dd {
+    margin: 0;
+}
+
+/* the board as text: ~ is water, . is dry ground */
+.ws-map {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--ws-line);
+    border-radius: 8px;
+    background: #f7fafc;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    letter-spacing: 0.18em;
+    color: #3b5164;
+    overflow-x: auto;
+}
+
+.ws-waves {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    color: var(--ws-dim);
+}
+
+.ws-row-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.ws-row-actions .ws-button {
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.ws-publish {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 24px 48px;
+}
+
+.ws-publish[hidden] {
+    display: none;
+}
+
+.ws-preview {
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--ws-line);
+    border-radius: 10px;
+    background: var(--ws-panel);
+}
+
+.ws-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ws-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ws-dim);
+}
+
+.ws-field input,
+.ws-field textarea {
+    padding: 9px 11px;
+    border: 1px solid var(--ws-line);
+    border-radius: 8px;
+    background: var(--ws-panel);
+    color: var(--ws-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    resize: vertical;
+}
+
+.ws-field input:focus,
+.ws-field textarea:focus {
+    outline: 2px solid var(--ws-accent);
+    outline-offset: -1px;
+}
+
+.ws-required {
+    color: var(--ws-danger);
+    font-style: normal;
+}
+
+.ws-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.ws-button.primary {
+    border-color: var(--ws-accent);
+    background: var(--ws-accent);
+    color: #ffffff;
+}
+
+.ws-button.primary:hover {
+    color: #ffffff;
+    filter: brightness(1.08);
+}
+
+.ws-button[disabled] {
+    opacity: 0.55;
+    cursor: default;
+}

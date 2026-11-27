@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>Ants Workshop</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/workshop.css">
+    </head>
+
+    <body>
+        <header class="ws-bar">
+            <h1 class="ws-title">ANTS WORKSHOP</h1>
+            <div class="ws-actions">
+                <span class="ws-identity" hidden></span>
+                <button class="ws-button" type="button" data-action="signin" hidden>Sign in</button>
+                <button class="ws-button" type="button" data-action="signout" hidden>Sign out</button>
+                <button class="ws-button" type="button" data-action="publish" hidden>Publish</button>
+                <a class="ws-button ws-back" href="/">Back</a>
+            </div>
+        </header>
+
+        <main data-view="lists">
+            <div class="ws-tools">
+                <div class="ws-lane">
+                    <nav class="ws-pager" data-pager="local"></nav>
+                </div>
+                <div class="ws-lane">
+                    <form class="ws-search" data-form="search">
+                        <select class="ws-select" data-action="search-field">
+                            <option value="title">title</option>
+                            <option value="author">author</option>
+                            <option value="description">description</option>
+                            <option value="id">id</option>
+                        </select>
+                        <input class="ws-input" type="search" data-action="search-text"
+                               placeholder="search the workshop" autocomplete="off">
+                        <button class="ws-button" type="submit">Search</button>
+                    </form>
+                    <div class="ws-lane-row">
+                        <select class="ws-select" data-action="sort">
+                            <option value="new">newest</option>
+                            <option value="likes">most liked</option>
+                        </select>
+                        <nav class="ws-pager" data-pager="remote"></nav>
+                        <label class="ws-filter" data-action="mine-filter" hidden>
+                            <input type="checkbox" data-action="mine-only"> only mine
+                        </label>
+                    </div>
+                    <p class="ws-result" data-result="remote" hidden></p>
+                </div>
+            </div>
+
+            <div class="ws-columns">
+                <section class="ws-column">
+                    <h2 class="ws-heading">Downloaded</h2>
+                    <div class="ws-list" data-list="local"></div>
+                </section>
+                <section class="ws-column">
+                    <h2 class="ws-heading">Online</h2>
+                    <div class="ws-list" data-list="remote"></div>
+                </section>
+            </div>
+        </main>
+
+        <main class="ws-publish" data-view="publish" hidden>
+            <h2 class="ws-heading">Publish this level</h2>
+            <div class="ws-preview" data-preview></div>
+            <form class="ws-form" data-form="publish">
+                <label class="ws-field">
+                    <span>Title <i class="ws-required">*</i></span>
+                    <input name="name" maxlength="40" required autocomplete="off">
+                </label>
+                <label class="ws-field">
+                    <span>Author <i class="ws-required">*</i></span>
+                    <input name="authorName" maxlength="40" required autocomplete="off">
+                </label>
+                <label class="ws-field">
+                    <span>Description</span>
+                    <textarea name="description" maxlength="400" rows="3"></textarea>
+                </label>
+                <div class="ws-form-actions">
+                    <button class="ws-button" type="button" data-action="cancel-publish">Cancel</button>
+                    <button class="ws-button primary" type="submit">Publish</button>
+                </div>
+            </form>
+        </main>
+
+        <script src="/workshop.js"></script>
+    </body>
+</html>
