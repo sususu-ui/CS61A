@@ -143,7 +143,7 @@ class Ant(Insect):
     is_container = False
     # ADD CLASS ATTRIBUTES HERE
     # BEGIN PROBLEM Optional 1
-    "*** YOUR CODE HERE ***"
+    blocks_path = True
     # END PROBLEM Optional 1
 
     def __init__(self, health=2):
@@ -731,7 +731,9 @@ class NinjaAnt(Ant):
     food_cost = 5
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN PROBLEM Optional 1
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    is_waterproof = True
+    blocks_path = False
     # END PROBLEM Optional 1
 
     def __init__(self, health=3):
@@ -739,7 +741,15 @@ class NinjaAnt(Ant):
 
     def action(self, gamestate):
         # BEGIN PROBLEM Optional 1
-        "*** YOUR CODE HERE ***"
+        
+        
+        for bee in self.place.bees[:]:
+            bee.reduce_health(self.damage)
+
+        if not self.place.exit.is_homebase:
+            for bee in self.place.exit.bees[:]:
+                bee.reduce_health(self.damage)
+        
         # END PROBLEM Optional 1
 
 
@@ -748,9 +758,10 @@ class LaserAnt(ThrowerAnt):
 
     name = 'Laser'
     food_cost = 16
+    damage = 4
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN PROBLEM Optional 2
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END PROBLEM Optional 2
 
     def __init__(self, health=2):
@@ -759,12 +770,38 @@ class LaserAnt(ThrowerAnt):
 
     def insects_in_front(self):
         # BEGIN PROBLEM Optional 2
-        return {}
+        in_front = {}
+        place = self.place
+        distance = 0
+        
+        while not place.is_hive:
+            # 当前 place 的 ant，排除 LaserAnt 自己
+            ant = place.ant
+            if ant is not None and ant is not self:
+                in_front[ant] = distance
+
+            # 如果这个 ant 是容器，它里面的 ant 也要包括
+            if ant is not None and ant.is_container and ant.ant_contained is not None:
+                contained = ant.ant_contained
+                if contained is not self:
+                    in_front[contained] = distance
+
+            # 当前 place 的所有 bee
+            for bee in place.bees:
+                in_front[bee] = distance
+
+            place = place.entrance   # 朝 Hive 方向
+            distance += 1
+
+
+        return in_front
         # END PROBLEM Optional 2
 
     def calculate_damage(self, distance):
         # BEGIN PROBLEM Optional 2
-        return 0
+        reduced_damage_cause_of_distance = 0.25 * distance
+        reduced_damage_cause_of_shot = 0.0625 * self.insects_shot
+        return max(0, self.damage - reduced_damage_cause_of_distance - reduced_damage_cause_of_shot)
         # END PROBLEM Optional 2
 
     def action(self, gamestate):
@@ -811,7 +848,7 @@ class Bee(Insect):
         """Return True if this Bee cannot advance to the next Place."""
         # Special handling for NinjaAnt
         # BEGIN PROBLEM Optional 1
-        return self.place.ant is not None
+        return self.place.ant is not None and self.place.ant.blocks_path
         # END PROBLEM Optional 1
 
     def action(self, gamestate):

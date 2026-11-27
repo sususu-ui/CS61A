@@ -2,7 +2,7 @@ from ants import *
 from bees_ext import *
 
 
-ENABLE_PLAYABLE_LEVELS = False     # Set this to True to enable playable levels after you finish the project
+ENABLE_PLAYABLE_LEVELS = True     # Set this to True to enable playable levels after you finish the project
 
 
 ANT_TYPES = {cls.name: cls for cls in ant_types()}
